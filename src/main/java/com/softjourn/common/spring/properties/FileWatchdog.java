@@ -42,7 +42,6 @@ class FileWatchdog implements AutoCloseable {
     private Runnable listenerWorker() {
         return () -> Stream.of(watchKey)
                 .flatMap(watchKey -> watchKey.pollEvents().stream())
-                //.filter(watchEvent -> watchEvent.kind().equals(ENTRY_MODIFY))
                 .filter(watchEvent -> watchEvent.count() > 0)
                 .map(watchEvent -> (Path) watchEvent.context()) //relative path to watching directory
                 .map(dirPath::resolve)
