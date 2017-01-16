@@ -10,11 +10,9 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -28,6 +26,9 @@ class PropertiesReloadingListener {
     private final static Pattern pattern = Pattern.compile("file:(.*)]$");
 
     private final AbstractEnvironment environment;
+    private final FileWatchdogFactory watchdogFactory;
+    private PropertiesUpdaterFactory propertiesUpdaterFactory;
+    private PropertiesReader reader;
 
     private PropertiesUpdater propertiesUpdater;
 
@@ -36,17 +37,23 @@ class PropertiesReloadingListener {
     private Set<FileWatchdog> watchers;
 
     @Autowired
-    public PropertiesReloadingListener(AbstractEnvironment environment) {
+    public PropertiesReloadingListener(AbstractEnvironment environment,
+                                       FileWatchdogFactory watchdogFactory,
+                                       PropertiesUpdaterFactory propertiesUpdaterFactory,
+                                       PropertiesReader reader) {
         this.environment = environment;
+        this.watchdogFactory = watchdogFactory;
+        this.propertiesUpdaterFactory = propertiesUpdaterFactory;
+        this.reader = reader;
     }
 
 
     void setObservableBeans(Set<Object> observableBeans) {
-        propertiesUpdater = new PropertiesUpdater(observableBeans);
+        propertiesUpdater = propertiesUpdaterFactory.get(observableBeans);
     }
 
     @PostConstruct
-    private void init() {
+    void init() {
         try {
             setupSources();
             setupWatching();
@@ -56,7 +63,7 @@ class PropertiesReloadingListener {
     }
 
     @PreDestroy
-    private void tearDown() {
+    void tearDown() {
         watchers.forEach(watcher -> {
             try {
                 watcher.close();
@@ -69,7 +76,7 @@ class PropertiesReloadingListener {
     private void setupWatching() {
         watchers = sources.stream()
                 .map(fileName -> Paths.get(fileName))
-                .map(path -> new FileWatchdog(path, onChangeListener()))
+                .map(path -> watchdogFactory.get(path, onChangeListener()))
                 .collect(Collectors.toSet());
     }
 
@@ -82,10 +89,8 @@ class PropertiesReloadingListener {
     }
 
     private void updateProperties(Path filePath) {
-        Properties properties = new Properties();
         try {
-            properties.load(Files.newBufferedReader(filePath));
-            propertiesUpdater.update(properties);
+            propertiesUpdater.update(reader.read(filePath));
         } catch (IOException e) {
             log.warn("Can't reload properties from file " + filePath);
         }
