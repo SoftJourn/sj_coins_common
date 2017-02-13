@@ -1,0 +1,12 @@
+# IDEA
+.idea/
+*.iml
+*.ipr
+
+# Maven
+target/
+
+# Logs
+*.log
+
+application-prod.properties
