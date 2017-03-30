@@ -3,6 +3,7 @@ package com.softjourn.common.auth;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatcher;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -15,8 +16,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 
@@ -57,8 +58,6 @@ public class OAuthHelperTest {
         assertNotNull(headers);
         assertThat(headers.size(), is(2));
         assertThat(headers.get(HttpHeaders.CONTENT_TYPE).get(0), is("application/x-www-form-urlencoded"));
-        System.out.println(headers);
-
     }
 
     @Test
@@ -68,6 +67,34 @@ public class OAuthHelperTest {
         assertEquals(method.invoke(oAuthHelper), tokenDTO);
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    public void requestWithToken() throws Exception {
+        oAuthHelper.requestWithToken("URL", HttpMethod.POST, new HttpEntity<>(this), this.getClass());
+
+        verify(restTemplate).exchange(Matchers.eq("URL"), Matchers.eq(HttpMethod.POST), Matchers.argThat(new ArgumentMatcher<HttpEntity<OAuthHelperTest>>() {
+            @Override
+            public boolean matches(Object argument) {
+                HttpEntity<OAuthHelperTest> httpEntity = (HttpEntity<OAuthHelperTest>) argument;
+                return httpEntity.getBody().equals(OAuthHelperTest.this) && httpEntity.getHeaders().containsKey(HttpHeaders.AUTHORIZATION);
+            }
+        }), eq(OAuthHelperTest.class));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void getForEntityWithToken() throws Exception {
+        oAuthHelper.getForEntityWithToken("URL", this.getClass());
+
+        verify(restTemplate).exchange(Matchers.eq("URL"), Matchers.eq(HttpMethod.GET), Matchers.argThat(new ArgumentMatcher<HttpEntity<String>>() {
+            @Override
+            public boolean matches(Object argument) {
+                HttpEntity<String> httpEntity = (HttpEntity) argument;
+                return httpEntity.getBody().isEmpty() && httpEntity.getHeaders().containsKey(HttpHeaders.AUTHORIZATION);
+            }
+        }), eq(OAuthHelperTest.class));
+    }
+
     /**
      * Get token
      * Positive test
@@ -75,14 +102,8 @@ public class OAuthHelperTest {
     @Test
     public void getToken_tokenDTOGetAccessToken() throws Exception {
         assertEquals(tokenDTO.getAccessToken(), oAuthHelper.getToken());
-        ;
     }
 
-    /**
-     * Test after timeout
-     *
-     * @throws Exception
-     */
     @Test
     public void getToken_newDTOGetAccessToken() throws Exception {
         AccessTokenDTO newTokenDTO = new AccessTokenDTO("newToken"
