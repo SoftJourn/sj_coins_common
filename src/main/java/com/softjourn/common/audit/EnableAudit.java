@@ -11,4 +11,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Import(AuditConfiguration.class)
 public @interface EnableAudit {
+
+    boolean saveValue() default false;
 }

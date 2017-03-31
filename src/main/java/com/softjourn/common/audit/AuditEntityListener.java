@@ -2,10 +2,7 @@ package com.softjourn.common.audit;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import javax.persistence.Id;
-import javax.persistence.PostPersist;
-import javax.persistence.PostRemove;
-import javax.persistence.PostUpdate;
+import javax.persistence.*;
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.Optional;
@@ -14,27 +11,34 @@ import java.util.stream.Stream;
 public class AuditEntityListener {
 
     private static AuditRepository repository;
+    private static boolean saveValue = false;
 
     public static void setRepository(AuditRepository repository) {
         AuditEntityListener.repository = repository;
     }
 
-    @PostPersist
+    static void saveValue(boolean save) {
+        saveValue = save;
+    }
+
+    @PrePersist
     public void postCreate(Object entity) {
         AuditEntity auditEntity = getAuditEntity(entity, AuditEntity.Action.CREATE);
-        repository.save(auditEntity);
+        if (saveValue) auditEntity.setUpdatedValue(entity.toString());
+        Optional.ofNullable(repository).ifPresent(repo -> repo.save(auditEntity));
     }
 
     @PostUpdate
     public void postUpdate(Object entity) {
         AuditEntity auditEntity = getAuditEntity(entity, AuditEntity.Action.UPDATE);
-        repository.save(auditEntity);
+        if (saveValue) auditEntity.setUpdatedValue(entity.toString());
+        Optional.ofNullable(repository).ifPresent(repo -> repo.save(auditEntity));
     }
 
     @PostRemove
     public void postRemove(Object entity) {
         AuditEntity auditEntity = getAuditEntity(entity, AuditEntity.Action.REMOVE);
-        repository.save(auditEntity);
+        Optional.ofNullable(repository).ifPresent(repo -> repo.save(auditEntity));
     }
 
     AuditEntity getAuditEntity(Object entity, AuditEntity.Action action) {

@@ -31,6 +31,9 @@ public class AuditEntity {
 
     private String entityId;
 
+    @Column(columnDefinition = "TEXT")
+    private String updatedValue;
+
     public enum Action {
         CREATE, REMOVE, UPDATE
     }
