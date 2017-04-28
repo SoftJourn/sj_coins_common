@@ -2,6 +2,7 @@ package com.softjourn.common.utils;
 
 import org.junit.Test;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.*;
 
@@ -31,6 +32,8 @@ public class ReflectionUtilTest {
         assertThat(ReflectionUtil.tryToCastValue(Double.class, 552), is(552.0));
         assertThat(ReflectionUtil.tryToCastValue(Double.class, "552.0"), is(552.0));
         assertThat(ReflectionUtil.tryToCastValue(Double.class, "552"), is(552.0));
+        assertThat(ReflectionUtil.tryToCastValue(Double.class, new BigDecimal("552")), is(552.0));
+        assertThat(ReflectionUtil.tryToCastValue(Double.class, new BigInteger("552")), is(552.0));
 
         assertThat(ReflectionUtil.tryToCastValue(Float.class, 52.0), is(52.0f));
         assertThat(ReflectionUtil.tryToCastValue(Float.class, 52), is(52.0f));
