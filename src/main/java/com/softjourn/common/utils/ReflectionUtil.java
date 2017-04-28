@@ -2,14 +2,13 @@ package com.softjourn.common.utils;
 
 import org.springframework.util.ClassUtils;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import javax.persistence.Id;
+import java.lang.reflect.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class ReflectionUtil {
@@ -22,6 +21,27 @@ public class ReflectionUtil {
         put(long.class, Long.class);
         put(boolean.class, Boolean.class);
     }});
+
+    /**
+     * Get name of ID property of entity class
+     * @param entityClass entity class mapped with annotations
+     * @return name of Id property
+     * @throws IllegalArgumentException if class is not entity
+     */
+    public static String getIdFieldName(Class entityClass) {
+        return getIdFieldProperty(entityClass, Field::getName);
+
+    }
+
+    /**
+     * Get type of ID property of entity class
+     * @param entityClass entity class mapped with annotations
+     * @return Class of Id property
+     * @throws IllegalArgumentException if class is not entity
+     */
+    public static Class<?> getIdFieldType(Class entityClass) {
+        return getIdFieldProperty(entityClass, Field::getType);
+    }
 
     /**
      * Cast provided value value to provided lass if it is possible
@@ -56,6 +76,14 @@ public class ReflectionUtil {
         } catch (ReflectiveOperationException e) {
             throw new IllegalArgumentException("Can't create value of class " + valueClass.getName() + " from value " + value.toString(), e);
         }
+    }
+
+    private static  <P> P getIdFieldProperty(Class entityClass, Function<Field, P> propertyMapper) {
+        return Stream.of(entityClass.getDeclaredFields())
+                .filter(field -> field.isAnnotationPresent(Id.class))
+                .map(propertyMapper)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Can't get ID field of entity " + entityClass));
     }
 
     @SuppressWarnings("unchecked")

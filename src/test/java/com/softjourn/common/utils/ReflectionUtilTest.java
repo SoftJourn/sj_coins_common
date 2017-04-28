@@ -2,10 +2,12 @@ package com.softjourn.common.utils;
 
 import org.junit.Test;
 
+import javax.persistence.Id;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.*;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
@@ -84,4 +86,35 @@ public class ReflectionUtilTest {
         ReflectionUtil.tryToCastValue(Instant.class, "2017.02.02 00:00:0");
     }
 
+    @Test
+    public void getIdPropertyName() throws Exception {
+        assertThat(ReflectionUtil.getIdFieldName(TestEntityInteger.class), is("intId"));
+        assertThat(ReflectionUtil.getIdFieldName(TestEntityString.class), is("stringId"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void getIdPropertyName_notEntity() throws Exception {
+        ReflectionUtil.getIdFieldName(ReflectionUtilTest.class);
+    }
+
+    @Test
+    public void getIdPropertyType() throws Exception {
+        assertThat(ReflectionUtil.getIdFieldType(TestEntityInteger.class), equalTo(Integer.class));
+        assertThat(ReflectionUtil.getIdFieldType(TestEntityString.class), equalTo(String.class));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void getIdPropertyType_notEntity() throws Exception {
+        ReflectionUtil.getIdFieldName(ReflectionUtilTest.class);
+    }
+
+    private static class TestEntityInteger {
+        @Id
+        private Integer intId;
+    }
+
+    private static class TestEntityString {
+        @Id
+        private String stringId;
+    }
 }
