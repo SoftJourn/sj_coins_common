@@ -9,6 +9,7 @@ import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class ReflectionUtil {
@@ -48,7 +49,9 @@ public class ReflectionUtil {
                 return getInstanceByParse(valueClass, value);
             } else if (value instanceof Integer && Number.class.isAssignableFrom(valueClass)) {
                 return valueClass.getConstructor(String.class).newInstance(value.toString());
-            } else
+            } else if (!(value instanceof String)) {
+                return tryToCastValue(valueClass, Objects.toString(value));
+            }
                 throw new IllegalArgumentException("Can't create value of class " + valueClass.getName() + " from value " + value.toString());
         } catch (ReflectiveOperationException e) {
             throw new IllegalArgumentException("Can't create value of class " + valueClass.getName() + " from value " + value.toString(), e);
