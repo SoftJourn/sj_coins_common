@@ -37,27 +37,11 @@ public class ExcelExport {
     public <T> Workbook export(String name, List<T> entities, List<ExportDefiner> definers)
             throws ReflectiveOperationException {
         HSSFWorkbook workbook = new HSSFWorkbook();
-        HSSFSheet sheet = workbook.createSheet(name);
+        workbook.createSheet(name);
 
-        int columns = 0;
-        // header
-        if (definers != null) {
-            Row header = sheet.createRow(0);
-            columns = prepareHeaders(header, getDefaultStyle(workbook), 0, definers);
-        }
+        addHeader(workbook, name, 0, definers);
 
-        // main content
-        if (entities != null) {
-            for (int i = 0; i < entities.size(); i++) {
-                Row content = sheet.createRow(i + 1);
-                columns = prepareContent(content, getDefaultStyle(workbook), 0, definers, entities.get(i));
-            }
-        }
-
-        // auto size columns width
-        for (int i = 0; i < columns; i++) {
-            sheet.autoSizeColumn(i);
-        }
+        addContent(workbook, name, 1, definers, entities);
 
         return workbook;
     }
@@ -87,7 +71,7 @@ public class ExcelExport {
         Cell cell = row.createCell(0);
         cell.setCellValue(divider);
         cell.setCellStyle(getDefaultStyle(workbook));
-        sheet.addMergedRegion(new CellRangeAddress(rowNumber, rowNumber, 1, cellsToMerge));
+        sheet.addMergedRegion(new CellRangeAddress(rowNumber, rowNumber, 0, cellsToMerge));
     }
 
     /**
@@ -130,7 +114,7 @@ public class ExcelExport {
         if (entities != null) {
             finalPosition = rowNumber + entities.size();
             for (int i = 0; i < entities.size(); i++) {
-                Row content = sheet.createRow(rowNumber + i + 1);
+                Row content = sheet.createRow(rowNumber + i);
                 columns = prepareContent(content, getDefaultStyle(workbook), 0, definers, entities.get(i));
             }
         }

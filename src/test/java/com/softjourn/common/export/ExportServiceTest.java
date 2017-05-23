@@ -1,6 +1,7 @@
 package com.softjourn.common.export;
 
 import lombok.Data;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,13 +20,13 @@ import static org.junit.Assert.assertEquals;
 @RunWith(MockitoJUnitRunner.class)
 public class ExportServiceTest {
 
-    ExcelExport reportService;
+    private ExcelExport excelExport;
 
-    List<ExportDefiner> definers;
+    private List<ExportDefiner> definers;
 
-    List<ExportDefiner> primitives;
+    private List<ExportDefiner> primitives;
 
-    List<Object> entities;
+    private List<Object> entities;
 
     @Before
     public void setUp() {
@@ -72,14 +73,14 @@ public class ExportServiceTest {
 
         entities.add(transaction);
 
-        reportService = new ExcelExport();
+        excelExport = new ExcelExport();
     }
 
     @Test
     public void checkHeadersTest() throws ReflectiveOperationException {
         int headersCount = 8;
 
-        Workbook workbook = reportService.export("some", null, definers);
+        Workbook workbook = excelExport.export("some", null, definers);
 
         assertEquals("some", workbook.getSheetName(0));
         assertEquals(headersCount, workbook.getSheetAt(0).getRow(0).getLastCellNum());
@@ -98,7 +99,7 @@ public class ExportServiceTest {
     public void checkContentTest() throws ReflectiveOperationException {
         int headersCount = 8;
 
-        Workbook workbook = reportService.export("some", entities, definers);
+        Workbook workbook = excelExport.export("some", entities, definers);
 
         assertEquals("some", workbook.getSheetName(0));
         assertEquals(headersCount, workbook.getSheetAt(0).getRow(0).getLastCellNum());
@@ -117,7 +118,7 @@ public class ExportServiceTest {
     public void checkPrimitivesTest() throws ReflectiveOperationException {
         int headersCount = primitives.size();
 
-        Workbook workbook = reportService.export("some", new ArrayList<Primitives>() {{
+        Workbook workbook = excelExport.export("some", new ArrayList<Primitives>() {{
             add(new Primitives());
         }}, primitives);
 
@@ -140,10 +141,77 @@ public class ExportServiceTest {
         definers.add(new ExportDefiner("getSomething", "Something", new Class[]{String.class}, "Something"));
         int headersCount = 2;
 
-        Workbook workbook = reportService.export("some", entities, definers);
+        Workbook workbook = excelExport.export("some", entities, definers);
 
         assertEquals("some", workbook.getSheetName(0));
         assertEquals(headersCount, workbook.getSheetAt(0).getRow(0).getLastCellNum());
+    }
+
+    @Test
+    public void addSheetTest() {
+        Workbook workbook = new HSSFWorkbook();
+        String sheetName = "sheet";
+        ExcelExport excelExport = new ExcelExport();
+        excelExport.addSheet(workbook, sheetName);
+
+        assertEquals(sheetName, workbook.getSheetName(0));
+    }
+
+    @Test
+    public void addDividerTest() {
+        Workbook workbook = new HSSFWorkbook();
+        String sheetName = "sheet";
+        String divider = "divider";
+        ExcelExport excelExport = new ExcelExport();
+        excelExport.addSheet(workbook, sheetName);
+        excelExport.addDivider(workbook, sheetName, divider, 0, 1);
+
+        assertEquals(sheetName, workbook.getSheetName(0));
+        assertEquals(divider, workbook.getSheet(sheetName).getRow(0).getCell(0).getStringCellValue());
+    }
+
+    @Test
+    public void addHeaderTest() {
+        Workbook workbook = new HSSFWorkbook();
+        String sheetName = "sheet";
+        int headersCount = 8;
+        ExcelExport excelExport = new ExcelExport();
+        excelExport.addSheet(workbook, sheetName);
+        excelExport.addHeader(workbook, sheetName, 0, definers);
+
+        assertEquals(sheetName, workbook.getSheetName(0));
+        assertEquals(headersCount, workbook.getSheetAt(0).getRow(0).getLastCellNum());
+
+        assertEquals("Account", workbook.getSheetAt(0).getRow(0).getCell(0).getStringCellValue());
+        assertEquals("Amount", workbook.getSheetAt(0).getRow(0).getCell(1).getStringCellValue());
+        assertEquals("Comment", workbook.getSheetAt(0).getRow(0).getCell(2).getStringCellValue());
+        assertEquals("Created", workbook.getSheetAt(0).getRow(0).getCell(3).getStringCellValue());
+        assertEquals("Destination", workbook.getSheetAt(0).getRow(0).getCell(4).getStringCellValue());
+        assertEquals("Error", workbook.getSheetAt(0).getRow(0).getCell(5).getStringCellValue());
+        assertEquals("Status", workbook.getSheetAt(0).getRow(0).getCell(6).getStringCellValue());
+        assertEquals("Type", workbook.getSheetAt(0).getRow(0).getCell(7).getStringCellValue());
+    }
+
+    @Test
+    public void addContentTest() throws ReflectiveOperationException {
+        Workbook workbook = new HSSFWorkbook();
+        String sheetName = "sheet";
+        int headersCount = 8;
+        ExcelExport excelExport = new ExcelExport();
+        excelExport.addSheet(workbook, sheetName);
+        excelExport.addContent(workbook, sheetName, 0, definers, entities);
+
+        assertEquals(sheetName, workbook.getSheetName(0));
+        assertEquals(headersCount, workbook.getSheetAt(0).getRow(0).getLastCellNum());
+
+        assertEquals("full name", workbook.getSheetAt(0).getRow(0).getCell(0).getStringCellValue());
+        assertEquals(100, workbook.getSheetAt(0).getRow(0).getCell(1).getNumericCellValue(), 0);
+        assertEquals("comment", workbook.getSheetAt(0).getRow(0).getCell(2).getStringCellValue());
+        assertEquals("Fri, 28 Apr 2017 17:30:30 GMT", workbook.getSheetAt(0).getRow(0).getCell(3).getStringCellValue());
+        assertEquals("full name", workbook.getSheetAt(0).getRow(0).getCell(4).getStringCellValue());
+        assertEquals("error", workbook.getSheetAt(0).getRow(0).getCell(5).getStringCellValue());
+        assertEquals("SUCCESS", workbook.getSheetAt(0).getRow(0).getCell(6).getStringCellValue());
+        assertEquals("TRANSFER", workbook.getSheetAt(0).getRow(0).getCell(7).getStringCellValue());
     }
 
     @Data
