@@ -111,7 +111,7 @@ public class ExcelExport {
         int columns = 0;
         // main content
         if (entities != null) {
-            finalPosition = rowNumber + entities.size();
+            finalPosition = rowNumber + entities.size() - 1;
             for (int i = 0; i < entities.size(); i++) {
                 Row content = sheet.createRow(rowNumber + i);
                 columns = prepareContent(content, getDefaultStyle(workbook), 0, definers, entities.get(i));
