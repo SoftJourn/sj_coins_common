@@ -6,9 +6,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
-import org.mockito.Matchers;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -32,6 +32,7 @@ public class CallsLoggingAspectTest {
 
     @Before
     public void setUp() throws Exception {
+
         loggingAspect = new CallsLoggingAspect();
 
         Field log = loggingAspect.getClass().getDeclaredField("log");
@@ -49,20 +50,12 @@ public class CallsLoggingAspectTest {
         loggingAspect.logCall(joinPoint);
 
 
-        verify(logger).debug(Matchers.argThat(new ArgumentMatcher<String>() {
-            @Override
-            public boolean matches(Object argument) {
-                String s = (String) argument;
-                return s.startsWith("Call of method");
-            }
+        verify(logger).debug(argThat(argument -> {
+            return argument.startsWith("Call of method");
         }));
 
-        verify(logger).debug(Matchers.argThat(new ArgumentMatcher<String>() {
-            @Override
-            public boolean matches(Object argument) {
-                String s = (String) argument;
-                return s.contains("failed with exception") && s.contains("test exception");
-            }
+        verify(logger).debug(argThat(argument -> {
+            return argument.contains("failed with exception") && argument.contains("test exception");
         }));
     }
 
@@ -73,20 +66,12 @@ public class CallsLoggingAspectTest {
         assertEquals(this, loggingAspect.logCall(joinPoint));
 
 
-        verify(logger).debug(Matchers.argThat(new ArgumentMatcher<String>() {
-            @Override
-            public boolean matches(Object argument) {
-                String s = (String) argument;
-                return s.startsWith("Call of method");
-            }
+        verify(logger).debug(argThat(argument -> {
+            return argument.startsWith("Call of method");
         }));
 
-        verify(logger).debug(Matchers.argThat(new ArgumentMatcher<String>() {
-            @Override
-            public boolean matches(Object argument) {
-                String s = (String) argument;
-                return s.startsWith("Return value of method") && s.contains(this.getClass().getSimpleName());
-            }
+        verify(logger).debug(argThat(argument -> {
+            return argument.startsWith("Return value of method") && argument.contains(this.getClass().getSimpleName());
         }));
     }
 

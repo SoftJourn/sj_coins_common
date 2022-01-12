@@ -4,7 +4,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,9 +13,7 @@ import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anySet;
 import static org.mockito.Mockito.*;
-
 
 @RunWith(MockitoJUnitRunner.class)
 public class ReloadableBeansBeanPostProcessorTest {
@@ -36,6 +35,7 @@ public class ReloadableBeansBeanPostProcessorTest {
 
     @Before
     public void init() {
+
         postProcessor = new ReloadableBeansBeanPostProcessor();
 
         beans = new ArrayList<>();

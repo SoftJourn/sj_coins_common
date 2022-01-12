@@ -4,9 +4,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
-import org.mockito.Matchers;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -16,7 +16,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,7 +46,7 @@ public class OAuthHelperTest {
                 , "bearer", 500L, "read", "ceaece10-860b-42ba-990a-7bc81b067635");
         ResponseEntity<AccessTokenDTO> response = new ResponseEntity<>(tokenDTO, HttpStatus.OK);
         when(restTemplate.postForEntity(eq(url), any(HttpEntity.class), eq(AccessTokenDTO.class))).thenReturn(response);
-        when(restTemplate.exchange(Matchers.anyString(), eq(HttpMethod.POST), any(), eq(String.class)))
+        lenient().when(restTemplate.exchange(anyString(), eq(HttpMethod.POST), any(), eq(String.class)))
                 .thenReturn(new ResponseEntity<>("response", HttpStatus.OK));
     }
 
@@ -68,31 +72,23 @@ public class OAuthHelperTest {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void requestWithToken() throws Exception {
         oAuthHelper.requestWithToken("URL", HttpMethod.POST, new HttpEntity<>(this), this.getClass());
-
-        verify(restTemplate).exchange(Matchers.eq("URL"), Matchers.eq(HttpMethod.POST), Matchers.argThat(new ArgumentMatcher<HttpEntity<OAuthHelperTest>>() {
-            @Override
-            public boolean matches(Object argument) {
-                HttpEntity<OAuthHelperTest> httpEntity = (HttpEntity<OAuthHelperTest>) argument;
-                return httpEntity.getBody().equals(OAuthHelperTest.this) && httpEntity.getHeaders().containsKey(HttpHeaders.AUTHORIZATION);
-            }
-        }), eq(OAuthHelperTest.class));
+        verify(restTemplate).exchange(eq("URL"), eq(HttpMethod.POST),
+                argThat((ArgumentMatcher<HttpEntity<OAuthHelperTest>>) httpEntity ->
+                        httpEntity.getBody().equals(OAuthHelperTest.this)
+                                && httpEntity.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)), eq(OAuthHelperTest.class)
+        );
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void getForEntityWithToken() throws Exception {
         oAuthHelper.getForEntityWithToken("URL", this.getClass());
 
-        verify(restTemplate).exchange(Matchers.eq("URL"), Matchers.eq(HttpMethod.GET), Matchers.argThat(new ArgumentMatcher<HttpEntity<String>>() {
-            @Override
-            public boolean matches(Object argument) {
-                HttpEntity<String> httpEntity = (HttpEntity) argument;
-                return httpEntity.getBody().isEmpty() && httpEntity.getHeaders().containsKey(HttpHeaders.AUTHORIZATION);
-            }
-        }), eq(OAuthHelperTest.class));
+        verify(restTemplate).exchange(eq("URL"), eq(HttpMethod.GET),
+                argThat((ArgumentMatcher<HttpEntity<String>>) httpEntity ->
+                                httpEntity.getBody().isEmpty() && httpEntity.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)
+        ), eq(OAuthHelperTest.class));
     }
 
     /**
