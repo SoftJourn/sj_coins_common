@@ -2,11 +2,12 @@ package com.softjourn.common.audit;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatcher;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -18,9 +19,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.argThat;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({SecurityContextHolder.class, AuditEntityListener.class})
@@ -49,9 +50,10 @@ public class AuditEntityListenerTest {
         when(authentication.getName()).thenReturn(TEST_ACCOUNT);
 
         securityContext = mock(SecurityContext.class);
+
         when(securityContext.getAuthentication()).thenReturn(authentication);
 
-        when(SecurityContextHolder.getContext()).thenReturn(securityContext);
+        when(SecurityContextHolder.getContext()).thenAnswer((Answer<SecurityContext>) invocation -> securityContext );
 
         auditRepository = mock(AuditRepository.class);
 
@@ -63,18 +65,14 @@ public class AuditEntityListenerTest {
     public void postCreate() throws Exception {
         entityListener.postCreate(entity);
 
-        Mockito.verify(auditRepository).save(argThat(new ArgumentMatcher<AuditEntity>() {
-            @Override
-            public boolean matches(Object argument) {
-                AuditEntity auditEntity = (AuditEntity) argument;
-                assertNull(auditEntity.getId());
-                assertEquals(TEST_ENTITY_ID.toString(), auditEntity.getEntityId());
-                assertEquals("TestEntity", auditEntity.getEntityName());
-                assertEquals(TEST_ACCOUNT, auditEntity.getUserName());
-                assertEquals(AuditEntity.Action.CREATE, auditEntity.getAction());
-                assertNotNull(auditEntity.getDate());
-                return true;
-            }
+        Mockito.verify(auditRepository).save(argThat(auditEntity -> {
+            assertNull(auditEntity.getId());
+            assertEquals(TEST_ENTITY_ID.toString(), auditEntity.getEntityId());
+            assertEquals("TestEntity", auditEntity.getEntityName());
+            assertEquals(TEST_ACCOUNT, auditEntity.getUserName());
+            assertEquals(AuditEntity.Action.CREATE, auditEntity.getAction());
+            assertNotNull(auditEntity.getDate());
+            return true;
         }));
     }
 
@@ -83,18 +81,14 @@ public class AuditEntityListenerTest {
     public void postUpdate() throws Exception {
         entityListener.postUpdate(entity);
 
-        Mockito.verify(auditRepository).save(argThat(new ArgumentMatcher<AuditEntity>() {
-            @Override
-            public boolean matches(Object argument) {
-                AuditEntity auditEntity = (AuditEntity) argument;
-                assertNull(auditEntity.getId());
-                assertEquals(TEST_ENTITY_ID.toString(), auditEntity.getEntityId());
-                assertEquals("TestEntity", auditEntity.getEntityName());
-                assertEquals(TEST_ACCOUNT, auditEntity.getUserName());
-                assertEquals(AuditEntity.Action.UPDATE, auditEntity.getAction());
-                assertNotNull(auditEntity.getDate());
-                return true;
-            }
+        Mockito.verify(auditRepository).save(argThat(auditEntity -> {
+            assertNull(auditEntity.getId());
+            assertEquals(TEST_ENTITY_ID.toString(), auditEntity.getEntityId());
+            assertEquals("TestEntity", auditEntity.getEntityName());
+            assertEquals(TEST_ACCOUNT, auditEntity.getUserName());
+            assertEquals(AuditEntity.Action.UPDATE, auditEntity.getAction());
+            assertNotNull(auditEntity.getDate());
+            return true;
         }));
     }
 
@@ -103,18 +97,14 @@ public class AuditEntityListenerTest {
     public void postRemove() throws Exception {
         entityListener.postRemove(entity);
 
-        Mockito.verify(auditRepository).save(argThat(new ArgumentMatcher<AuditEntity>() {
-            @Override
-            public boolean matches(Object argument) {
-                AuditEntity auditEntity = (AuditEntity) argument;
-                assertNull(auditEntity.getId());
-                assertEquals(TEST_ENTITY_ID.toString(), auditEntity.getEntityId());
-                assertEquals("TestEntity", auditEntity.getEntityName());
-                assertEquals(TEST_ACCOUNT, auditEntity.getUserName());
-                assertEquals(AuditEntity.Action.REMOVE, auditEntity.getAction());
-                assertNotNull(auditEntity.getDate());
-                return true;
-            }
+        Mockito.verify(auditRepository).save(argThat(auditEntity -> {
+            assertNull(auditEntity.getId());
+            assertEquals(TEST_ENTITY_ID.toString(), auditEntity.getEntityId());
+            assertEquals("TestEntity", auditEntity.getEntityName());
+            assertEquals(TEST_ACCOUNT, auditEntity.getUserName());
+            assertEquals(AuditEntity.Action.REMOVE, auditEntity.getAction());
+            assertNotNull(auditEntity.getDate());
+            return true;
         }));
     }
 
@@ -146,6 +136,7 @@ public class AuditEntityListenerTest {
     @Entity
     @Data
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class TestEntity {
         @Id
         private Long id;
@@ -155,6 +146,7 @@ public class AuditEntityListenerTest {
     @Entity
     @Data
     @AllArgsConstructor
+    @NoArgsConstructor
     public static class OtherTestEntity {
         @Id
         private String id;
