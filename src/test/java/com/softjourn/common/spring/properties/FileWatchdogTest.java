@@ -30,12 +30,12 @@ public class FileWatchdogTest {
 
     @Test
     public void testLocalFileChanged() throws Exception {
-        check(ABSOLUTE_FILE_NAME);
+        check(LOCAL_FILE_NAME);
     }
 
     @Test
     public void testAbsoluteFileChanged() throws Exception {
-        check(LOCAL_FILE_NAME);
+        check(ABSOLUTE_FILE_NAME);
     }
 
     @After
@@ -48,7 +48,7 @@ public class FileWatchdogTest {
         watchdog = new FileWatchdog(Paths.get(filename), path -> counter.incrementAndGet(), 1, TimeUnit.SECONDS);
         Thread.sleep(100); //wait for initializing
         changeFile(filename);
-        Thread.sleep(2000); //wait for event
+        Thread.sleep(11000); //wait for event
         assertTrue(counter.get() > 0);
     }
 
