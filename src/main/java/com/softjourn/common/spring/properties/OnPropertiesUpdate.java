@@ -5,7 +5,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
 /**
  * Mark Spring bean method to be triggered after property file is updated and
  * fields annotated by @Value annotation is updated.
