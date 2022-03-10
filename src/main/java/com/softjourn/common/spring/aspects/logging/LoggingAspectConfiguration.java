@@ -7,6 +7,6 @@ import org.springframework.context.annotation.Configuration;
  * Configuration to include logging aspect into spring context.
  */
 @Configuration
-@ComponentScan(basePackages = "com.softjourn.common.spring.aspects.logging")
+@ComponentScan("com.softjourn.common.spring.aspects.logging")
 public class LoggingAspectConfiguration {
 }

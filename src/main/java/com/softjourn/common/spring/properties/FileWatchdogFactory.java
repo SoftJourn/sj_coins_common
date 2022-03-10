@@ -1,9 +1,8 @@
 package com.softjourn.common.spring.properties;
 
-import org.springframework.stereotype.Component;
-
 import java.nio.file.Path;
 import java.util.function.Consumer;
+import org.springframework.stereotype.Component;
 
 /**
  * Creates new instances of FileWatchdog
@@ -11,7 +10,7 @@ import java.util.function.Consumer;
 @Component
 public class FileWatchdogFactory {
 
-    public FileWatchdog get(Path filePath, Consumer<Path> onChangeCallback) {
-        return new FileWatchdog(filePath, onChangeCallback);
-    }
+  public FileWatchdog get(Path filePath, Consumer<Path> onChangeCallback) {
+    return new FileWatchdog(filePath, onChangeCallback);
+  }
 }
